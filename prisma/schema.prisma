@@ -1,0 +1,340 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  OFFICER
+  NORMAL_USER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum ComplaintStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+}
+
+enum CaseStatus {
+  ACTIVE
+  CLOSED
+  IN_PROGRESS
+  PENDING
+}
+
+enum EvidenceType {
+  PHYSICAL
+  DIGITAL
+  DOCUMENTARY
+  TESTIMONIAL
+}
+
+enum PredictionStatus {
+  LOW_RISK
+  MEDIUM_RISK
+  HIGH_RISK
+}
+
+model User {
+  id            String     @id @default(cuid())
+  name          String?
+  email         String     @unique
+  emailVerified DateTime?  @map("email_verified")
+  image         String?
+  password      String?
+  role          UserRole
+  status        UserStatus @default(ACTIVE)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  // Relation fields
+  accounts   Account[]
+  sessions   Session[]
+  officer    Officer?
+  admin      Admin?
+  complaints Complaint[]
+
+  @@map("users")
+}
+
+model Officer {
+  id        String   @id @default(uuid())
+  officerId String   @unique @default(uuid())
+  name      String
+  phone     String
+  address   String
+  picture   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
+
+  // Relation fields
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String        @unique
+  cases  CaseOfficer[]
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relation fields
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique
+}
+
+model Case {
+  id          String     @id @default(uuid())
+  caseId      String     @unique @default(uuid())
+  caseName    String
+  Description String
+  status      CaseStatus @default(PENDING)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relation fields
+  officers    CaseOfficer[]
+  CaseSuspect CaseSuspect[]
+  evidence    Evidence[]
+  predictions Prediction[]
+  results     Result[]
+}
+
+model CaseOfficer {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relation fields
+  case      Case    @relation(fields: [caseId], references: [id])
+  caseId    String
+  officer   Officer @relation(fields: [officerId], references: [id])
+  officerId String
+
+  @@unique([caseId, officerId])
+}
+
+model Suspect {
+  id                     String   @id @default(uuid())
+  suspectId              String   @unique @default(uuid())
+  name                   String
+  dateOfBirth            String
+  gender                 String
+  nationality            String
+  address                String
+  phoneNumber            String
+  email                  String
+  height                 String
+  weight                 String
+  hasDistinctiveFeatures Boolean
+  distinctiveFeatures    String?
+  occupation             String
+  education              String
+  maritalStatus          String
+  dependents             String?
+  hasCriminalHistory     Boolean
+  criminalHistory        String?
+  socialMediaProfiles    String?
+  idNumbers              String?
+  relationshipToIncident String?
+  alibisAndWitnesses     String?
+  comments               String?
+  picture                String
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  // Relation fields
+  cases           CaseSuspect[]
+  EvidenceSuspect EvidenceSuspect[]
+
+  // New relation fields
+  associates  Associate[]
+  socialMedia SocialMedia[]
+  alibi       Alibi?
+}
+
+model Associate {
+  id        String  @id @default(uuid())
+  type      String
+  name      String
+  relation  String?
+  suspect   Suspect @relation(fields: [suspectId], references: [id])
+  suspectId String
+}
+
+model SocialMedia {
+  id        String  @id @default(uuid())
+  platform  String
+  username  String
+  suspect   Suspect @relation(fields: [suspectId], references: [id])
+  suspectId String
+}
+
+model Alibi {
+  id          String  @id @default(uuid())
+  description String
+  location    String
+  suspect     Suspect @relation(fields: [suspectId], references: [id])
+  suspectId   String  @unique
+}
+
+model CaseSuspect {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relation fields
+  case      Case    @relation(fields: [caseId], references: [id])
+  caseId    String
+  suspect   Suspect @relation(fields: [suspectId], references: [id])
+  suspectId String
+
+  @@unique([caseId, suspectId])
+}
+
+model Evidence {
+  id                 String       @id @default(uuid())
+  evidenceId         String       @unique @default(uuid())
+  caseNumber         String
+  evidenceType       EvidenceType
+  description        String
+  collectionDate     DateTime
+  collectionLocation String
+  collectedBy        String
+  chainOfCustody     Json
+  storageLocation    String
+  notes              String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  // Relation fields
+  case            Case              @relation(fields: [caseId], references: [id])
+  caseId          String
+  EvidenceImage   EvidenceImage[]
+  EvidenceSuspect EvidenceSuspect[]
+}
+
+model EvidenceImage {
+  id         String @id @default(uuid())
+  evidenceId String
+  publicId   String
+
+  // Relation fields
+  evidence Evidence @relation(fields: [evidenceId], references: [id])
+}
+
+model EvidenceSuspect {
+  id         String @id @default(uuid())
+  evidenceId String
+  suspectId  String
+
+  // Relation fields
+  evidence Evidence @relation(fields: [evidenceId], references: [id])
+  suspect  Suspect  @relation(fields: [suspectId], references: [id])
+}
+
+model Prediction {
+  id                String           @id @default(uuid())
+  caseId            String
+  suspectImage      String
+  logicalScore      Float
+  physicalScore     Float
+  distanceFromCrime Float
+  facialExpression  String
+  predictionScore   Float
+  status            PredictionStatus
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  case    Case     @relation(fields: [caseId], references: [id])
+  results Result[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
+
+model Result {
+  id           String     @id @default(uuid())
+  caseId       String
+  predictionId String?
+  description  String
+  status       CaseStatus
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  case       Case        @relation(fields: [caseId], references: [id])
+  prediction Prediction? @relation(fields: [predictionId], references: [id])
+}
+
+model Announcement {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Complaint {
+  id          String          @id @default(uuid())
+  title       String
+  description String
+  status      ComplaintStatus @default(OPEN)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
+}
