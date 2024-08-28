@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type * as z from 'zod'
+import axios, { isAxiosError } from 'axios'
 import {
   Button,
   Grid,
@@ -21,8 +22,6 @@ import {
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
-
-import axios from 'axios'
 
 // import type { Suspect } from '@prisma/client'
 
@@ -125,7 +124,7 @@ const AddEvidenceForm = () => {
     } catch (error) {
       console.error('Error submitting evidence:', error)
 
-      if (axios.isAxiosError(error)) {
+      if (isAxiosError(error)) {
         console.error('Axios error:', error.response?.data)
         setError(error.response?.data?.message || 'An unexpected error occurred')
       } else {
@@ -134,6 +133,29 @@ const AddEvidenceForm = () => {
       }
     }
   }
+
+  // const onSubmit = async (data: EvidenceFormData) => {
+  //   console.log('Form submitted', data)
+
+  //   try {
+  //     console.log('Submitting data:', data)
+  //     const response = await axios.post('/api/evidence', data)
+
+  //     console.log('Response:', response.data)
+  //     router.push('/admin/evidence')
+  //     router.refresh()
+  //   } catch (error) {
+  //     console.error('Error submitting evidence:', error)
+
+  //     if (axios.isAxiosError(error)) {
+  //       console.error('Axios error:', error.response?.data)
+  //       setError(error.response?.data?.message || 'An unexpected error occurred')
+  //     } else {
+  //       console.error('Unknown error:', error)
+  //       setError('An unexpected error occurred')
+  //     }
+  //   }
+  // }
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>

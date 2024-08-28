@@ -22,7 +22,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 
-import axios from 'axios'
+import axios, { isAxiosError } from 'axios'
 
 // import type { Suspect } from '@prisma/client'
 
@@ -125,7 +125,7 @@ const AddEvidenceForm = () => {
     } catch (error) {
       console.error('Error submitting evidence:', error)
 
-      if (axios.isAxiosError(error)) {
+      if (isAxiosError(error)) {
         console.error('Axios error:', error.response?.data)
         setError(error.response?.data?.message || 'An unexpected error occurred')
       } else {

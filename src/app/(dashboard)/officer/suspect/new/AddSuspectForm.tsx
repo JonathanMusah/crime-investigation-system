@@ -22,7 +22,7 @@ import {
   FormControl
 } from '@mui/material'
 
-import axios from 'axios'
+import axios, { isAxiosError } from 'axios'
 
 import CloudinaryUpload from '@/components/CloudinaryUpload'
 import { suspectSchema } from '@/app/ValidationSchemas'
@@ -155,11 +155,11 @@ const AddSuspectForm = () => {
       router.push('/officer/suspect')
       router.refresh()
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error('API Error:', error.response?.data)
+      if (isAxiosError(error)) {
+        console.error('Axios error:', error.response?.data)
         setError(error.response?.data?.message || 'An unexpected error occurred')
       } else {
-        console.error('Submission error:', error)
+        console.error('Unknown error:', error)
         setError('An unexpected error occurred')
       }
     }
