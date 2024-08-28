@@ -9,7 +9,7 @@ import { getServerSession } from 'next-auth/next'
 
 // import prisma from '../../../../prisma/client'
 import { officerSchema, userSchema } from '@/app/ValidationSchemas'
-import { authOptions } from '../auth/[...nextauth]/route'
+import { authOptions } from '../auth/authOptions'
 
 const prisma = new PrismaClient()
 

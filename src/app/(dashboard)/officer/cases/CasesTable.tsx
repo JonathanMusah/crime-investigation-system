@@ -134,16 +134,32 @@ const CasesTable = () => {
   }
 
   if (isLoading) {
-    return <Typography>Loading cases...</Typography>
+    return <Typography>Loading cases...</Typography>;
   }
-
+  
   if (error) {
-    return <Typography color='error'>Error loading cases: {error.message}</Typography>
+    return (
+      <Typography color="error">
+        Error loading cases: {(error as Error).message}
+      </Typography>
+    );
+  }
+  
+  if (!cases || cases.length === 0) {
+    return <Typography>No cases assigned to you at the moment.</Typography>;
   }
 
-  if (!cases || cases.length === 0) {
-    return <Typography>No cases assigned to you at the moment.</Typography>
-  }
+  // if (isLoading) {
+  //   return <Typography>Loading cases...</Typography>
+  // }
+
+  // if (error) {
+  //   return <Typography color='error'>Error loading cases: {error.message}</Typography>
+  // }
+
+  // if (!cases || cases.length === 0) {
+  //   return <Typography>No cases assigned to you at the moment.</Typography>
+  // }
 
   const handleDelete = (id: string) => {
     deleteMutation.mutate(id)
